@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import WordGrid from "@/components/WordGrid/WordGrid";
 import Keyboard from "@/components/Keyboard/Keyboard";
 import ResultModal from "@/components/ResultsModal/ResultsModal";
@@ -22,7 +22,12 @@ export default function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isWinner, setIsWinner] = useState(false);
 
+    const fetchedRef = useRef(false);
+
     const fetchWord = useCallback(async () => {
+        if (fetchedRef.current) return;
+        fetchedRef.current = true;
+
         try {
             const response = await fetch(
                 "https://random-word-api.herokuapp.com/word?length=5&lang=en"
@@ -94,6 +99,7 @@ export default function Home() {
         setIsModalOpen(false);
         setLetterStatus({});
         setShowHint(false); // Add this line to reset the hint state
+        fetchedRef.current = false; // Reset the ref
         fetchWord();
     }, [fetchWord]);
 
