@@ -23,7 +23,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
 
     const getKeyClass = (key: string) => {
         const baseClass =
-            "p-2 m-1 rounded-md font-bold min-w-6 transition-colors duration-150 ease-in-out";
+            "p-2 m-0.5 rounded-md font-bold min-w-8 transition-colors duration-150 ease-in-out min-h-12";
         const darkModeClass = isDarkMode ? "dark:text-white" : "";
         const hoverFocusClass =
             "hover:brightness-110 focus:ring-2 focus:ring-offset-2 focus:outline-none";
@@ -63,7 +63,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     };
 
     return (
-        <div className="mt-8">
+        <div className="mt-4">
             {rows.map((row, rowIndex) => (
                 <div key={rowIndex} className="flex justify-center">
                     {row.map((key) => (
