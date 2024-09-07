@@ -180,7 +180,7 @@ export default function Home() {
                         </label>
                     </div>
                     <h1 className="text-4xl sm:text-6xl font-bold text-center text-black dark:text-white">
-                        Wrodel
+                        Wrodle
                     </h1>
                     <div className="flex justify-end">
                         <button

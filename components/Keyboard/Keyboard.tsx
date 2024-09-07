@@ -22,7 +22,7 @@ const Keyboard: React.FC<KeyboardProps> = ({
     ];
 
     const getKeyClass = (key: string) => {
-        const baseClass = "p-2 m-1 rounded-md font-bold";
+        const baseClass = "p-2 m-1 rounded-md font-bold min-w-6";
         const darkModeClass = isDarkMode ? "dark:text-white" : "";
         switch (letterStatuses[key]) {
             case "correct":
