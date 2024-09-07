@@ -22,22 +22,34 @@ const Keyboard: React.FC<KeyboardProps> = ({
     ];
 
     const getKeyClass = (key: string) => {
-        const baseClass = "p-2 m-1 rounded-md font-bold min-w-6";
+        const baseClass =
+            "p-2 m-1 rounded-md font-bold min-w-6 transition-colors duration-150 ease-in-out";
         const darkModeClass = isDarkMode ? "dark:text-white" : "";
+        const hoverFocusClass =
+            "hover:brightness-110 focus:ring-2 focus:ring-offset-2 focus:outline-none";
+
+        let statusClass;
         switch (letterStatuses[key]) {
             case "correct":
-                return `${baseClass} ${darkModeClass} bg-green-500`;
+                statusClass =
+                    "bg-green-500 hover:bg-green-600 focus:ring-green-400";
+                break;
             case "present":
-                return `${baseClass} ${darkModeClass} bg-yellow-500`;
+                statusClass =
+                    "bg-yellow-500 hover:bg-yellow-600 focus:ring-yellow-400";
+                break;
             case "absent":
-                return `${baseClass} ${darkModeClass} ${
-                    isDarkMode ? "bg-gray-900" : "bg-gray-500"
-                }`;
+                statusClass = isDarkMode
+                    ? "bg-gray-900 hover:bg-gray-800 focus:ring-gray-700"
+                    : "bg-gray-500 hover:bg-gray-600 focus:ring-gray-400";
+                break;
             default:
-                return `${baseClass} ${darkModeClass} ${
-                    isDarkMode ? "bg-gray-600" : "bg-gray-200"
-                }`;
+                statusClass = isDarkMode
+                    ? "bg-gray-600 hover:bg-gray-500 focus:ring-gray-400"
+                    : "bg-gray-200 hover:bg-gray-300 focus:ring-gray-100";
         }
+
+        return `${baseClass} ${darkModeClass} ${statusClass} ${hoverFocusClass}`;
     };
 
     const handleKeyClick = (key: string) => {
