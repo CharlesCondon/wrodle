@@ -1,101 +1,228 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import WordGrid from "@/components/WordGrid/WordGrid";
+import Keyboard from "@/components/Keyboard/Keyboard";
+import ResultModal from "@/components/ResultsModal/ResultsModal";
+import { FaSun, FaMoon } from "react-icons/fa"; // Import icons
+
+type LetterStatus = "correct" | "present" | "absent" | "unused";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+    const [word, setWord] = useState<string>("");
+    const [guesses, setGuesses] = useState<string[]>([]);
+    const [currentGuess, setCurrentGuess] = useState<string>("");
+    const [gameOver, setGameOver] = useState<boolean>(false);
+    const [original, setOriginal] = useState<string>("");
+    const [showHint, setShowHint] = useState<boolean>(false);
+    const [letterStatus, setLetterStatus] = useState<
+        Record<string, LetterStatus>
+    >({});
+    const [isDarkMode, setIsDarkMode] = useState<boolean>(true);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isWinner, setIsWinner] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
-  );
+    const fetchWord = useCallback(async () => {
+        try {
+            const response = await fetch(
+                "https://random-word-api.herokuapp.com/word?length=5&lang=en"
+            );
+            const data = await response.json();
+            if (Array.isArray(data) && data.length > 0) {
+                let word = data[0].toUpperCase();
+                setOriginal(word);
+                const letters = word.split("");
+                const index1 = Math.floor(Math.random() * 5);
+                let index2 = Math.floor(Math.random() * 5);
+                while (index1 === index2) {
+                    index2 = Math.floor(Math.random() * 5);
+                }
+                [letters[index1], letters[index2]] = [
+                    letters[index2],
+                    letters[index1],
+                ];
+                word = letters.join("");
+                setWord(word);
+            } else {
+                console.error("No word found in the response");
+            }
+        } catch (error) {
+            console.error("Error fetching word:", error);
+        }
+    }, []);
+
+    const updateLetterStatus = useCallback(
+        (guess: string) => {
+            const newStatuses = { ...letterStatus };
+            const wordLetters = word.split("");
+
+            guess.split("").forEach((letter, index) => {
+                if (!wordLetters.includes(letter)) {
+                    newStatuses[letter] = "absent";
+                } else if (letter === wordLetters[index]) {
+                    newStatuses[letter] = "correct";
+                } else {
+                    newStatuses[letter] = "present";
+                }
+            });
+            setLetterStatus(newStatuses);
+        },
+        [word, letterStatus]
+    );
+
+    const submitGuess = useCallback(() => {
+        if (currentGuess.length === 5 && !gameOver) {
+            setGuesses((prevGuesses) => [...prevGuesses, currentGuess]);
+            updateLetterStatus(currentGuess);
+            setCurrentGuess("");
+            if (currentGuess === word) {
+                setIsWinner(true);
+                setGameOver(true);
+                setIsModalOpen(true);
+            } else if (guesses.length === 5) {
+                setGameOver(true);
+                setIsModalOpen(true);
+            }
+        }
+    }, [currentGuess, guesses.length, updateLetterStatus, word, gameOver]);
+
+    const resetGame = useCallback(() => {
+        setGuesses([]);
+        setCurrentGuess("");
+        setGameOver(false);
+        setIsWinner(false);
+        setIsModalOpen(false);
+        setLetterStatus({});
+        setShowHint(false); // Add this line to reset the hint state
+        fetchWord();
+    }, [fetchWord]);
+
+    const handleKeyPress = useCallback(
+        (key: string) => {
+            if (key === "ENTER") {
+                submitGuess();
+            } else if (key === "BACKSPACE") {
+                setCurrentGuess((prevGuess) => prevGuess.slice(0, -1));
+            } else if (
+                key.length === 1 &&
+                key >= "A" &&
+                key <= "Z" &&
+                currentGuess.length < 5
+            ) {
+                setCurrentGuess((prevGuess) => prevGuess + key);
+            }
+        },
+        [submitGuess, currentGuess]
+    );
+
+    const handleKeyDown = useCallback(
+        (event: KeyboardEvent) => {
+            const key = event.key.toUpperCase();
+            if (
+                key === "ENTER" ||
+                key === "BACKSPACE" ||
+                (key.length === 1 && key >= "A" && key <= "Z")
+            ) {
+                event.preventDefault();
+                handleKeyPress(key);
+            }
+        },
+        [handleKeyPress]
+    );
+
+    const toggleHint = () => {
+        setShowHint(!showHint);
+    };
+
+    const toggleDarkMode = () => {
+        setIsDarkMode(!isDarkMode);
+    };
+
+    useEffect(() => {
+        fetchWord();
+    }, [fetchWord]);
+
+    useEffect(() => {
+        window.addEventListener("keydown", handleKeyDown);
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown);
+        };
+    }, [handleKeyDown]);
+
+    return (
+        <main className={isDarkMode ? "dark" : ""}>
+            <div className="bg-white dark:bg-gray-800 text-black dark:text-white min-h-screen flex flex-col">
+                <header className="grid grid-cols-3 items-center p-4 border-b-2 mb-4 dark:border-gray-600">
+                    <div className="flex items-center">
+                        <div className="relative inline-block w-8 sm:w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                            <input
+                                type="checkbox"
+                                name="toggle"
+                                id="toggle"
+                                className="toggle-checkbox absolute block w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                                checked={isDarkMode}
+                                onChange={toggleDarkMode}
+                            />
+                            <label
+                                htmlFor="toggle"
+                                className="toggle-label block overflow-hidden h-5 sm:h-6 rounded-full bg-gray-300 cursor-pointer"
+                            ></label>
+                        </div>
+                        <label
+                            htmlFor="toggle"
+                            className="text-xs sm:text-sm text-gray-700 dark:text-gray-300"
+                        >
+                            {isDarkMode ? (
+                                <FaMoon className="inline-block" />
+                            ) : (
+                                <FaSun className="inline-block" />
+                            )}
+                        </label>
+                    </div>
+                    <h1 className="text-4xl sm:text-6xl font-bold text-center text-black dark:text-white">
+                        Wrodel
+                    </h1>
+                    <div className="flex justify-end">
+                        <button
+                            onClick={toggleHint}
+                            className="bg-slate-700 hover:bg-slate-500 text-white font-bold py-1 px-2 rounded text-xs sm:text-sm"
+                        >
+                            Hint
+                        </button>
+                    </div>
+                </header>
+                <div className="flex-grow pb-12 pt-4">
+                    {showHint && (
+                        <p className="text-center mb-8">
+                            Original word: {original}
+                        </p>
+                    )}
+                    <WordGrid
+                        guesses={guesses}
+                        word={word}
+                        currentGuess={currentGuess}
+                        isDarkMode={isDarkMode}
+                    />
+                    <Keyboard
+                        onKeyPress={handleKeyPress}
+                        letterStatuses={letterStatus}
+                        isDarkMode={isDarkMode}
+                    />
+                </div>
+                <div className="text-center p-4 text-gray-500">
+                    <span>by: </span>
+                    <a className="underline" href="https://charlescon.com">
+                        Charles
+                    </a>
+                </div>
+                <ResultModal
+                    isOpen={isModalOpen}
+                    onClose={resetGame}
+                    isWinner={isWinner}
+                    correctWord={word}
+                    isDarkMode={isDarkMode}
+                />
+            </div>
+        </main>
+    );
 }

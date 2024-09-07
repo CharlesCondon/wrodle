@@ -25,3 +25,11 @@ body {
     text-wrap: balance;
   }
 }
+
+.toggle-checkbox:checked {
+  right: 0;
+  border-color: rgb(51, 65, 85);
+}
+.toggle-checkbox:checked + .toggle-label {
+  background-color: rgb(51, 65, 85);
+}
